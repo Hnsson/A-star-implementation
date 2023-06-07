@@ -27,4 +27,5 @@ int maze[ROW][COL] =
 ```
 
 2. And the run with this maze gave the following print-out
+
 ![A* Algorithm](images/normal-run.png)
