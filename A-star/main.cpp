@@ -122,7 +122,7 @@ void trace_path(int maze[ROW][COL], std::unique_ptr<Node>& end) {
 	std::cout << "----------------------------------------------------------------------------------------" << std::endl << std::endl;
 }
 
-void a_star_search(int maze[ROW][COL], std::unique_ptr<Node> &start, std::unique_ptr<Node>& end) {
+int a_star_search(int maze[ROW][COL], std::unique_ptr<Node> &start, std::unique_ptr<Node>& end) {
 	// Create open list containing only the starting node
 	priority_queue open_list;
 	open_list.enqueue(start);
@@ -163,12 +163,10 @@ void a_star_search(int maze[ROW][COL], std::unique_ptr<Node> &start, std::unique
 			if (is_end(neighbour, end)) {
 				end->parent = neighbour.get();
 
-				std::cout << "Could find a optimal path to the destination!" << std::endl << std::endl;
-
 				// Trace path from end to start
 				trace_path(maze, neighbour);
 
-				return;
+				return 1;
 			}
 			// Else, compute both g and h for neighbour
 			else {
@@ -208,7 +206,7 @@ void a_star_search(int maze[ROW][COL], std::unique_ptr<Node> &start, std::unique
 		closed_list.push_back(std::move(current_node));
 	}
 
-	std::cout << "Couldn't find a path to the destination!" << std::endl;
+	return 0;
 }
 
 int main() {
@@ -235,7 +233,12 @@ int main() {
 	std::unique_ptr<Node> end(new Node(Location(9, 9), nullptr, 0, 0));
 
 	// Perform A* search to find the optimal path from the start to the end based on the maze
-	a_star_search(maze, start, end);
+	if (a_star_search(maze, start, end)) {
+		std::cout << "Could find a optimal path to the destination!" << std::endl << std::endl;
+	}
+	else {
+		std::cout << "Couldn't find a path to the destination!" << std::endl;
+	}
 
 	return 0;
 }
