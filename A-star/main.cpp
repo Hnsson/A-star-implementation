@@ -6,7 +6,7 @@
 #define ROW 10
 #define COL 10
 
-// Fast insertion and lookup due to being unordered. Used to keep track of visited location to prevent duplication in possible neighbors
+// Fast insertion and lookup due to being unordered. Used to keep track of visited locations to prevent duplication in possible neighbors
 std::unordered_set<Location> visited_nodes;
 
 // Check if a location is valid based on certain conditions
@@ -16,7 +16,7 @@ bool is_valid(int row, int col) {
 		return false;
 	}
 
-	// Create a Location object for the current row and column and check in the set if location has been visited
+	// Create a Location object for the current row and column and check in the set if the location has been visited
 	Location location(col, row);
 	if (!(visited_nodes.find(location) == visited_nodes.end())) {
 		return false;
@@ -26,7 +26,7 @@ bool is_valid(int row, int col) {
 	return true;
 }
 
-// Check if a location in the grid is unblocked (has value of 0) if (1) it means it is a wall in the maze
+// Check if a location in the grid is unblocked (has a value of 0) if (1) it means it is a wall in the maze
 bool is_unblocked(int grid[ROW][COL], int row, int col) {
 	return (grid[row][col] == 0);
 }
@@ -36,7 +36,7 @@ bool is_end(std::unique_ptr<Node>& node, std::unique_ptr<Node>& end) {
 	return (node->location == end->location);
 }
 
-// Calculate the heirstic (H score) using the Euclidean distance between the source and the current node
+// Calculate the heuristic (H score) using the Euclidean distance between the source and the current node
 double calc_h(std::unique_ptr<Node>& source, std::unique_ptr<Node>& node) {
 	return static_cast<double>(std::sqrt(
 		(source->location.col - node->location.col) * (source->location.col - node->location.col) +
@@ -93,7 +93,7 @@ void trace_path(int maze[ROW][COL], std::unique_ptr<Node>& end) {
 	}
 	std::cout << "---------------------------------------------------------------------------------------" << std::endl << std::endl;
 
-	// Print the maze grid with the optimal path marked by "O", obstacled marked by "|" and empty cells with "."
+	// Print the maze grid with the optimal path marked by "O", obstacles marked by "|" and empty cells with "."
 	std::cout << "--------------------------------- Visual representation -------------------------------" << std::endl;
 	for (int i = 0; i < ROW; i++) {
 		for (int j = 0; j < COL; j++) {
@@ -122,8 +122,8 @@ void trace_path(int maze[ROW][COL], std::unique_ptr<Node>& end) {
 	std::cout << "----------------------------------------------------------------------------------------" << std::endl << std::endl;
 }
 
-int a_star_search(int maze[ROW][COL], std::unique_ptr<Node> &start, std::unique_ptr<Node>& end) {
-	// Create open list containing only the starting node
+int a_star_search(int maze[ROW][COL], std::unique_ptr<Node> &start, std::unique_ptr<Node>& end, bool hasDiagonals) {
+	// Create an open list containing only the starting node
 	priority_queue open_list;
 	open_list.enqueue(start);
 	// Create an empty closed list
@@ -137,12 +137,15 @@ int a_star_search(int maze[ROW][COL], std::unique_ptr<Node> &start, std::unique_
 		open_list.dequeue();
 
 
-		// Generate all viable neighbours and set their parents to current node
+		// Generate all viable neighbours and set their parents to the current node
 		std::vector<std::unique_ptr<Node>> neighbours;
 
 		for (int d_row = -1; d_row <= 1; d_row++) {
 			for (int d_col = -1; d_col <= 1; d_col++) {
 				if (d_row == 0 && d_col == 0) {
+					continue;
+				}
+				if (!hasDiagonals && ((d_row == 1 && d_col == 1) || (d_row == -1 && d_col == 1) || (d_row == 1 && d_col == -1) || (d_row == -1 && d_col == -1))) {
 					continue;
 				}
 				int neighbor_row = current_node->location.row + d_row;
@@ -159,7 +162,7 @@ int a_star_search(int maze[ROW][COL], std::unique_ptr<Node> &start, std::unique_
 
 		// For each neighbour
 		for (auto& neighbour : neighbours) {
-			// If neighbour is the goal, stop search
+			// If neighbour is the goal, stop the search
 			if (is_end(neighbour, end)) {
 				end->parent = neighbour.get();
 
@@ -197,12 +200,12 @@ int a_star_search(int maze[ROW][COL], std::unique_ptr<Node> &start, std::unique_
 					}
 				}
 			}
-			// Otherwiese, add the neighbour to the open list
+			// Otherwise, add the neighbour to the open list
 			if (!skip_neighbour) {
 				open_list.enqueue(neighbour);
 			}
 		}
-		// Push current node to the closed list
+		// Push the current node to the closed list
 		closed_list.push_back(std::move(current_node));
 	}
 
@@ -228,13 +231,13 @@ int main() {
 		{0, 0, 0, 0, 0, 0, 0, 0, 1, 0}
 	};
 
-	// Create unique pointers for the starting and end node.
+	// Create unique pointers for the starting and end nodes.
 	std::unique_ptr<Node> start(new Node(Location(0, 0), nullptr, 0, 0));
 	std::unique_ptr<Node> end(new Node(Location(9, 9), nullptr, 0, 0));
 
 	// Perform A* search to find the optimal path from the start to the end based on the maze
-	if (a_star_search(maze, start, end)) {
-		std::cout << "Could find a optimal path to the destination!" << std::endl << std::endl;
+	if (a_star_search(maze, start, end, true)) {
+		std::cout << "Could find an optimal path to the destination!" << std::endl << std::endl;
 	}
 	else {
 		std::cout << "Couldn't find a path to the destination!" << std::endl;
